@@ -10,7 +10,7 @@
     },
     "postCreateCommand": "bash .devcontainer/setup.sh",
     "postStartCommand": "bash .devcontainer/on-start.sh",
-    "forwardPorts": [3000, 9090, 8080, 9142, 9143],
+    "forwardPorts": [3000, 9090, 8080, 9142, 9143, 8090, 9966],
     "portsAttributes": {
         "3000": {
             "label": "Grafana",
@@ -27,6 +27,12 @@
         },
         "9143": {
             "label": "GMT metrics page"
+        },
+        "8090": {
+            "label": "PetClinic"
+        },
+        "9966": {
+            "label": "PetClinic API"
         }
     },
     "customizations": {

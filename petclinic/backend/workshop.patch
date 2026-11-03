@@ -1,0 +1,274 @@
+diff --git a/pom.xml b/pom.xml
+index 1477dab..db9cea8 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -65,6 +65,21 @@
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-cache</artifactId>
+         </dependency>
++        <!-- Workshop. Hibernate second-level cache with Ehcache, switched on with L2_CACHE=true -->
++        <dependency>
++            <groupId>org.hibernate.orm</groupId>
++            <artifactId>hibernate-jcache</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.ehcache</groupId>
++            <artifactId>ehcache</artifactId>
++            <classifier>jakarta</classifier>
++        </dependency>
++        <!-- Workshop. Checkpoint and restore with CRaC -->
++        <dependency>
++            <groupId>org.crac</groupId>
++            <artifactId>crac</artifactId>
++        </dependency>
+         <dependency>
+             <groupId>org.springframework.boot</groupId>
+             <artifactId>spring-boot-starter-data-jpa</artifactId>
+@@ -245,6 +260,11 @@
+ 
+     <build>
+         <plugins>
++            <!-- Workshop. GraalVM Native Image with mvn -Pnative native:compile -->
++            <plugin>
++                <groupId>org.graalvm.buildtools</groupId>
++                <artifactId>native-maven-plugin</artifactId>
++            </plugin>
+             <plugin>
+                 <groupId>org.springframework.boot</groupId>
+                 <artifactId>spring-boot-maven-plugin</artifactId>
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Owner.java b/src/main/java/org/springframework/samples/petclinic/model/Owner.java
+index a32c007..5c38c29 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Owner.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Owner.java
+@@ -15,6 +15,9 @@
+  */
+ package org.springframework.samples.petclinic.model;
+ 
++import org.hibernate.annotations.Cache;
++import org.hibernate.annotations.CacheConcurrencyStrategy;
++
+ import org.springframework.core.style.ToStringCreator;
+ 
+ import jakarta.persistence.*;
+@@ -33,6 +36,7 @@ import java.util.*;
+  * @author Michael Isvy
+  */
+ @Entity
++@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+ @Table(name = "owners")
+ public class Owner extends Person {
+     @Column(name = "address")
+@@ -49,6 +53,7 @@ public class Owner extends Person {
+     @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be exactly 10 digits")
+     private String telephone;
+ 
++    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+     @OneToMany(cascade = CascadeType.ALL, mappedBy = "owner", fetch = FetchType.EAGER)
+     private Set<Pet> pets;
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Pet.java b/src/main/java/org/springframework/samples/petclinic/model/Pet.java
+index 8a766c6..fa921ae 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Pet.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Pet.java
+@@ -15,6 +15,9 @@
+  */
+ package org.springframework.samples.petclinic.model;
+ 
++import org.hibernate.annotations.Cache;
++import org.hibernate.annotations.CacheConcurrencyStrategy;
++
+ import jakarta.persistence.*;
+ import java.time.LocalDate;
+ import java.util.*;
+@@ -28,6 +31,7 @@ import java.util.*;
+  * @author Sam Brannen
+  */
+ @Entity
++@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+ @Table(name = "pets")
+ public class Pet extends NamedEntity {
+ 
+@@ -42,6 +46,7 @@ public class Pet extends NamedEntity {
+     @JoinColumn(name = "owner_id")
+     private Owner owner;
+ 
++    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pet", fetch = FetchType.EAGER)
+     private Set<Visit> visits;
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/PetType.java b/src/main/java/org/springframework/samples/petclinic/model/PetType.java
+index beecdec..ada2bbf 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/PetType.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/PetType.java
+@@ -15,6 +15,9 @@
+  */
+ package org.springframework.samples.petclinic.model;
+ 
++import org.hibernate.annotations.Cache;
++import org.hibernate.annotations.CacheConcurrencyStrategy;
++
+ import jakarta.persistence.Entity;
+ import jakarta.persistence.Table;
+ 
+@@ -23,6 +26,7 @@ import jakarta.persistence.Table;
+  *         Can be Cat, Dog, Hamster...
+  */
+ @Entity
++@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+ @Table(name = "types")
+ public class PetType extends NamedEntity {
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Specialty.java b/src/main/java/org/springframework/samples/petclinic/model/Specialty.java
+index 8eefd31..75d5bbb 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Specialty.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Specialty.java
+@@ -15,6 +15,9 @@
+  */
+ package org.springframework.samples.petclinic.model;
+ 
++import org.hibernate.annotations.Cache;
++import org.hibernate.annotations.CacheConcurrencyStrategy;
++
+ import jakarta.persistence.Entity;
+ import jakarta.persistence.Table;
+ 
+@@ -24,6 +27,7 @@ import jakarta.persistence.Table;
+  * @author Juergen Hoeller
+  */
+ @Entity
++@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+ @Table(name = "specialties")
+ public class Specialty extends NamedEntity {
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Vet.java b/src/main/java/org/springframework/samples/petclinic/model/Vet.java
+index 64f1d77..9da6b12 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Vet.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Vet.java
+@@ -15,6 +15,9 @@
+  */
+ package org.springframework.samples.petclinic.model;
+ 
++import org.hibernate.annotations.Cache;
++import org.hibernate.annotations.CacheConcurrencyStrategy;
++
+ import com.fasterxml.jackson.annotation.JsonIgnore;
+ 
+ import jakarta.persistence.*;
+@@ -30,9 +33,11 @@ import java.util.*;
+  * @author Arjen Poutsma
+  */
+ @Entity
++@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+ @Table(name = "vets")
+ public class Vet extends Person {
+ 
++    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+     @ManyToMany(fetch = FetchType.EAGER)
+     @JoinTable(name = "vet_specialties", joinColumns = @JoinColumn(name = "vet_id"),
+         inverseJoinColumns = @JoinColumn(name = "specialty_id"))
+diff --git a/src/main/java/org/springframework/samples/petclinic/model/Visit.java b/src/main/java/org/springframework/samples/petclinic/model/Visit.java
+index f443579..cead979 100644
+--- a/src/main/java/org/springframework/samples/petclinic/model/Visit.java
++++ b/src/main/java/org/springframework/samples/petclinic/model/Visit.java
+@@ -15,6 +15,9 @@
+  */
+ package org.springframework.samples.petclinic.model;
+ 
++import org.hibernate.annotations.Cache;
++import org.hibernate.annotations.CacheConcurrencyStrategy;
++
+ import jakarta.persistence.*;
+ import jakarta.validation.constraints.NotEmpty;
+ import java.time.LocalDate;
+@@ -25,6 +28,7 @@ import java.time.LocalDate;
+  * @author Ken Krebs
+  */
+ @Entity
++@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+ @Table(name = "visits")
+ public class Visit extends BaseEntity {
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java b/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java
+index 78c0093..a497447 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataOwnerRepository.java
+@@ -17,6 +17,9 @@ package org.springframework.samples.petclinic.repository.springdatajpa;
+ 
+ import java.util.Collection;
+ 
++import jakarta.persistence.QueryHint;
++import org.springframework.data.jpa.repository.QueryHints;
++
+ import org.springframework.context.annotation.Profile;
+ import org.springframework.data.jpa.repository.Query;
+ import org.springframework.data.repository.Repository;
+@@ -35,6 +38,7 @@ import org.springframework.samples.petclinic.repository.OwnerRepository;
+ public interface SpringDataOwnerRepository extends OwnerRepository, Repository<Owner, Integer> {
+ 
+     @Override
++    @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "true"))
+     @Query("SELECT DISTINCT owner FROM Owner owner left join fetch owner.pets WHERE owner.lastName LIKE :lastName%")
+     Collection<Owner> findByLastName(@Param("lastName") String lastName);
+ 
+diff --git a/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataVetRepository.java b/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataVetRepository.java
+index c52e440..e971fcb 100644
+--- a/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataVetRepository.java
++++ b/src/main/java/org/springframework/samples/petclinic/repository/springdatajpa/SpringDataVetRepository.java
+@@ -15,6 +15,10 @@
+  */
+ package org.springframework.samples.petclinic.repository.springdatajpa;
+ 
++import java.util.Collection;
++
++import jakarta.persistence.QueryHint;
++import org.springframework.data.jpa.repository.QueryHints;
+ import org.springframework.context.annotation.Profile;
+ import org.springframework.data.repository.Repository;
+ import org.springframework.samples.petclinic.model.Vet;
+@@ -29,4 +33,8 @@ import org.springframework.samples.petclinic.repository.VetRepository;
+ 
+ @Profile("spring-data-jpa")
+ public interface SpringDataVetRepository extends VetRepository, Repository<Vet, Integer> {
++
++    @Override
++    @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "true"))
++    Collection<Vet> findAll();
+ }
+diff --git a/src/main/resources/application-workshop.properties b/src/main/resources/application-workshop.properties
+new file mode 100644
+index 0000000..6e231fe
+--- /dev/null
++++ b/src/main/resources/application-workshop.properties
+@@ -0,0 +1,12 @@
++# Workshop profile for the cluster runs. Every variant uses the same settings.
++# Postgres gets schema and data at its own start, so the app does not run SQL scripts.
++spring.sql.init.mode=never
++# The app asks the database nothing while booting. The CRaC checkpoint is built without one.
++spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
++spring.jpa.properties.hibernate.boot.allow_jdbc_metadata_access=false
++# Second-level and query cache, off unless L2_CACHE=true
++spring.jpa.properties.hibernate.cache.use_second_level_cache=${L2_CACHE:false}
++spring.jpa.properties.hibernate.cache.use_query_cache=${L2_CACHE:false}
++spring.jpa.properties.hibernate.cache.region.factory_class=jcache
++spring.jpa.properties.hibernate.javax.cache.provider=org.ehcache.jsr107.EhcacheCachingProvider
++spring.jpa.properties.hibernate.javax.cache.missing_cache_strategy=create
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/RootRestController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/RootRestController.java
+index 7984f66..783d79a 100644
+--- a/src/main/java/org/springframework/samples/petclinic/rest/controller/RootRestController.java
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/RootRestController.java
+@@ -35,12 +35,13 @@ import org.springframework.web.bind.annotation.RestController;
+ @RequestMapping("/")
+ public class RootRestController {
+ 
+-    @Value("#{servletContext.contextPath}")
++    // Workshop. A property instead of SpEL, which needs reflection that Native Image does not have
++    @Value("${server.servlet.context-path:}")
+     private String servletContextPath;
+ 
+ 	@RequestMapping(value = "/")
+ 	public void redirectToSwagger(HttpServletResponse response) throws IOException {
+-		response.sendRedirect(this.servletContextPath + "/swagger-ui/index.html");
++		response.sendRedirect(this.servletContextPath.replaceAll("/$", "") + "/swagger-ui/index.html");
+ 	}
+ 
+ }

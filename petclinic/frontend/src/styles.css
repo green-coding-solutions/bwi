@@ -1,0 +1,135 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #222;
+  background: #f5f6f2;
+}
+
+body {
+  margin: 0;
+}
+
+nav {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 0.8rem 2rem;
+  background: #2f5d3a;
+}
+
+nav a {
+  color: #dce8dc;
+  text-decoration: none;
+}
+
+nav a.active {
+  color: #fff;
+  font-weight: bold;
+}
+
+.brand {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-right: 1rem;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem 2rem 3rem;
+}
+
+a {
+  color: #2f5d3a;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  margin: 0.5rem 0 1rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.45rem 0.7rem;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background: #e4ebe2;
+}
+
+table.details {
+  width: auto;
+}
+
+.search {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+input,
+button {
+  font: inherit;
+  padding: 0.4rem 0.7rem;
+}
+
+button {
+  background: #2f5d3a;
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.status {
+  list-style: none;
+  padding: 0;
+}
+
+.status li {
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.status time {
+  display: inline-block;
+  width: 7rem;
+  color: #666;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.pet {
+  background: #fff;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  align-items: start;
+  gap: 2rem;
+}
+
+.charts section {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+}

@@ -1,0 +1,53 @@
+name: PetClinic unter Last, JVM aus CRaC-Checkpoint
+author: Green Coding Solutions
+description: Wie usage_scenario.yml, aber Zulu 21 mit CRaC. Der Checkpoint entsteht beim Bauen des Images, die Boot-Phase stellt ihn nur wieder her.
+
+services:
+  db:
+    build:
+      context: ./backend
+      target: db
+    environment:
+      POSTGRES_USER: petclinic
+      POSTGRES_PASSWORD: petclinic
+      POSTGRES_DB: petclinic
+    healthcheck:
+      test: pg_isready -U petclinic
+      interval: 2s
+      start_period: 120s
+      start_interval: 1s
+
+  app:
+    build:
+      context: ./backend
+      target: crac
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: curl -fs http://localhost:9966/petclinic/actuator/health
+      interval: 2s
+      start_period: 120s
+      start_interval: 1s
+
+  load:
+    image: grafana/k6:1.0.0
+    entrypoint: tail
+    command: -f /dev/null
+    depends_on:
+      app:
+        condition: service_healthy
+
+flow:
+  - name: Warmup
+    container: load
+    commands:
+      - type: console
+        command: k6 run --quiet --vus 5 --duration 30s /tmp/repo/petclinic/load/browse.js
+        note: JIT und Caches aufwärmen
+  - name: Last
+    container: load
+    commands:
+      - type: console
+        command: k6 run --quiet --vus 20 --duration 2m /tmp/repo/petclinic/load/browse.js
+        note: Stöbern mit 20 virtuellen Nutzern

@@ -11,6 +11,7 @@ Willkommen im Codespace für den Workshop. Beim ersten Start richtet er sich sel
 | node_exporter | | Liest die CPU-Zeit des Codespace. |
 | Demo-App | 8080 | Spring Boot mit Actuator und Micrometer. |
 | Green Metrics Tool | 9142, 9143 | Liegt in `/workspaces/green-metrics-tool`. Das Dashboard ist Port 9143. |
+| PetClinic | 8090, 9966 | Startet erst auf Befehl, siehe unten. Port 8090 ist das React-Frontend, 9966 die REST-API. |
 
 Die Adressen stehen im Tab „Ports“. Grafana fragt nach keinem Login und jede Person mit Zugriff ist Admin. Gebt Port 3000 deshalb nicht öffentlich frei.
 
@@ -59,6 +60,24 @@ python3 runner.py --name "Simple Test" --uri "/workspaces/green-metrics-tool/exa
 Die Beispiele seht ihr im Explorer im Ordner `gmt-examples`. Jedes Beispiel hat eine `usage_scenario.yml`. Ändert eine davon oder legt eine eigene an und gebt ihren Pfad bei `--filename` an, etwa `--filename "stress/usage_scenario.yml"`.
 
 Das Ergebnis zeigt das Dashboard auf Port 9143. Die Ports 9142 und 9143 müssen öffentlich sein, sonst blockiert der Browser die Anfragen an die API.
+
+## PetClinic
+
+Die Demo-App aus Lokale Tools II ist Spring PetClinic REST mit Postgres und einem React-Frontend. Zum Ausprobieren startet ihr sie so.
+
+```sh
+docker compose -f petclinic/compose.yml up -d --build
+```
+
+Das Frontend öffnet ihr im Tab „Ports“ über Port 8090. Gemessen wird mit dem Green Metrics Tool.
+
+```sh
+cd /workspaces/green-metrics-tool
+source .venv/bin/activate
+python3 runner.py --name "PetClinic" --uri /workspaces/bwi --filename petclinic/usage_scenario.yml --dev-no-system-checks --skip-optimizations --dev-cache-build
+```
+
+Neben `usage_scenario.yml` (JDK 21) liegen die Varianten aus der Java-Liste. Das sind `usage_scenario_jdk25_coh.yml`, `usage_scenario_native.yml`, `usage_scenario_crac.yml` und `usage_scenario_l2cache.yml`. Der erste Lauf baut die Images und dauert einige Minuten länger. Native Image braucht beim Bauen viel Speicher und ist im Codespace nur etwas für Geduldige.
 
 ## Wenn etwas hängt
 
