@@ -14,7 +14,7 @@
     {
       "id": 1,
       "type": "timeseries",
-      "title": "Schritt 1 · Auslastung der VM",
+      "title": "Schritt 1. Auslastung der VM",
       "description": "vm:cpu_utilisation:ratio aus node_cpu_seconds_total",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -40,7 +40,7 @@
     {
       "id": 2,
       "type": "timeseries",
-      "title": "Schritt 2 · Leistung der VM in W",
+      "title": "Schritt 2. Leistung der VM in W",
       "description": "vm:power:watts nach dem linearen Modell",
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -97,7 +97,7 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "Schritt 3 · Energie im gewählten Zeitraum",
+      "title": "Schritt 3. Energie im Zeitraum",
       "description": "avg_over_time(vm:power:watts[$__range]) * $__range_s / 3600 / 1000",
       "gridPos": { "x": 6, "y": 8, "w": 6, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -129,7 +129,7 @@
     {
       "id": 5,
       "type": "stat",
-      "title": "Schritt 3 · Hochgerechnet auf einen Tag",
+      "title": "Schritt 3. Hochgerechnet auf einen Tag",
       "description": "avg_over_time(vm:power:watts[$__range]) * 24 / 1000 * 400. Annahme 400 g CO2e pro kWh",
       "gridPos": { "x": 12, "y": 8, "w": 6, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -193,7 +193,7 @@
     {
       "id": 7,
       "type": "row",
-      "title": "Pro Request statt pro Tag · Micrometer",
+      "title": "Pro Request statt pro Tag mit Micrometer",
       "collapsed": false,
       "gridPos": { "x": 0, "y": 14, "w": 24, "h": 1 },
       "panels": []

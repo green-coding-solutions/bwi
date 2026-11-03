@@ -38,6 +38,10 @@ sed -i "s#${CODESPACE_NAME}-9142.app.github.dev#localhost#" docker/nginx/api.con
 vhost_ratio=$(awk "BEGIN { print $(nproc) / 64 }")
 sed -i "s/common:/common:\n      psu_energy_ac_xgboost_machine:\n        CPUChips: 1\n        HW_CPUFreq: 2800\n        CPUCores: 32\n        CPUThreads: 64\n        TDP: 270\n        HW_MemAmountGB: 256\n        VHost_Ratio: ${vhost_ratio}\n/" config.yml
 
+# The network provider runs as the codespace user and cannot open the network namespace
+# of the root containers in the nested Docker. Every run would fail on it.
+sed -i "/^      network_io_cgroup_container:/,+1 s/^/#/" config.yml
+
 git clone https://github.com/green-coding-solutions/example-applications.git --depth=1 --single-branch example-applications || true
 
 docker compose -f docker/compose.yml down

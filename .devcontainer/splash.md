@@ -28,7 +28,7 @@ Die Adressen stehen im Tab „Ports“. Grafana fragt nach keinem Login und jede
 curl -X POST localhost:9090/-/reload
 ```
 
-**Schritt 3. kWh und g CO2e als Stat-Panel.** Das Dashboard „Energie-Panel“ hat alle Panels schon. Neue Panels könnt ihr in Grafana direkt speichern.
+**Schritt 3. kWh und g CO2e als Stat-Panel.** Das Dashboard „Energie-Panel“ hat alle Panels schon. Neue Panels könnt ihr in Grafana direkt speichern. Schreibt Panel-Titel dabei ohne Umlaute und ohne Zeichen wie „·“. Grafana schickt den Titel mit jeder Abfrage, und der Proxy von Codespaces lehnt solche Abfragen ab.
 
 **Schritt 4. Last erzeugen und der Kurve zusehen.**
 
