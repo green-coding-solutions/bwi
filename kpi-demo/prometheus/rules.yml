@@ -1,0 +1,10 @@
+# rules.yml. Annahmen sind Host 100 W bis 300 W und 64 Threads
+groups:
+  - name: energie
+    rules:
+      - record: vm:cpu_utilisation:ratio
+        expr: 1 - avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[1m]))
+      - record: vm:power:watts
+        expr: >-
+          count by (instance) (node_cpu_seconds_total{mode="idle"}) / 64
+          * (100 + (300 - 100) * vm:cpu_utilisation:ratio)

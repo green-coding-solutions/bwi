@@ -1,0 +1,10 @@
+apiVersion: 1
+
+providers:
+  - name: kpi-demo
+    folder: KPI-Demo
+    type: file
+    # Panels built live in the demo can be saved in the UI
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/dashboards

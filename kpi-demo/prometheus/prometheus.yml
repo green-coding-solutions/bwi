@@ -1,0 +1,21 @@
+# Short intervals so the curve reacts within seconds during the demo
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+rule_files:
+  - rules.yml
+
+scrape_configs:
+  - job_name: node
+    static_configs:
+      - targets: [node-exporter:9100]
+        labels:
+          instance: codespace
+
+  - job_name: demo-app
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: [demo-app:8080]
+        labels:
+          instance: demo-app

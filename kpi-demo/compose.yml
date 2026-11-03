@@ -1,0 +1,69 @@
+# Energie-Panel for a VM without hardware access. node_exporter reads the CPU time of
+# the Codespace, Prometheus turns it into watts with rules.yml and Grafana shows the panels.
+name: kpi-demo
+
+services:
+  node-exporter:
+    image: prom/node-exporter:v1.12.1
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=7d
+      # Allows curl -X POST localhost:9090/-/reload after editing rules.yml
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports:
+      - 127.0.0.1:9090:9090
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.2.5
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_USERS_DEFAULT_THEME: light
+      # The Codespaces port forwarding sends Host localhost, the browser sends the
+      # app.github.dev origin. Without this Grafana Live refuses the websocket.
+      GF_LIVE_ALLOWED_ORIGINS: https://*.app.github.dev
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - 127.0.0.1:3000:3000
+    restart: unless-stopped
+
+  # Spring Boot with Actuator and Micrometer for the panel per request
+  demo-app:
+    build: ./demo-app
+    ports:
+      - 127.0.0.1:8080:8080
+    restart: unless-stopped
+
+  # Load for the demo app. Start it with
+  # docker compose -f kpi-demo/compose.yml run --rm load
+  load:
+    image: grafana/k6:1.8.2
+    profiles: [load]
+    command: run /scripts/requests.js
+    environment:
+      RATE: ${RATE:-50}
+      DURATION: ${DURATION:-3m}
+    volumes:
+      - ./load:/scripts:ro
+
+volumes:
+  prometheus-data:
+  grafana-data:

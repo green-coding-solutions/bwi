@@ -1,0 +1,49 @@
+{
+    "name": "BWI Green Coding Workshop",
+    // Same default image as the Green Metrics Tool Codespace. It brings Docker in Docker, Python and Java.
+    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    // The Wett-Tipp in the KPI deck assumes 4 vCPUs. GMT needs the RAM of the 4-core machine.
+    "hostRequirements": {
+        "cpus": 4,
+        "memory": "16gb"
+    },
+    "postCreateCommand": "bash .devcontainer/setup.sh",
+    "postStartCommand": "bash .devcontainer/on-start.sh",
+    "forwardPorts": [3000, 9090, 8080, 9142, 9143],
+    "portsAttributes": {
+        "3000": {
+            "label": "Grafana",
+            "onAutoForward": "openBrowserOnce"
+        },
+        "9090": {
+            "label": "Prometheus"
+        },
+        "8080": {
+            "label": "Demo-App"
+        },
+        "9142": {
+            "label": "GMT api"
+        },
+        "9143": {
+            "label": "GMT metrics page"
+        }
+    },
+    "customizations": {
+        "codespaces": {
+            "openFiles": [
+                ".devcontainer/splash.md"
+            ]
+        },
+        "vscode": {
+            "settings": {
+                "workbench.editorAssociations": {
+                    "*.md": "vscode.markdown.preview.editor" // Open markdown files in preview mode by default
+                }
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-azuretools.vscode-docker"
+            ]
+        }
+    }
+}
