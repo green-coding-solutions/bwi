@@ -1,7 +1,8 @@
 {
     "name": "BWI Green Coding Workshop",
-    // Same default image as the Green Metrics Tool Codespace. It brings Docker in Docker, Python and Java.
-    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    // No image on purpose, like in the Green Metrics Tool Codespace. Codespaces then takes its
+    // default universal image, which is cached on the hosts and brings Docker in Docker, Python and Java.
+    // A pinned tag that is not the current default means a pull of about 10 GB on every create.
     // The Wett-Tipp in the KPI deck assumes 4 vCPUs. GMT needs the RAM of the 4-core machine.
     "hostRequirements": {
         "cpus": 4,
