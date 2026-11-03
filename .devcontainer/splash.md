@@ -56,6 +56,8 @@ source .venv/bin/activate
 python3 runner.py --name "Simple Test" --uri "/workspaces/green-metrics-tool/example-applications/" --filename "stress/usage_scenario.yml" --dev-no-system-checks --skip-optimizations --dev-cache-build
 ```
 
+Die Beispiele seht ihr im Explorer im Ordner `gmt-examples`. Jedes Beispiel hat eine `usage_scenario.yml`. Ändert eine davon oder legt eine eigene an und gebt ihren Pfad bei `--filename` an, etwa `--filename "stress/usage_scenario.yml"`.
+
 Das Ergebnis zeigt das Dashboard auf Port 9143. Die Ports 9142 und 9143 müssen öffentlich sein, sonst blockiert der Browser die Anfragen an die API.
 
 ## Wenn etwas hängt

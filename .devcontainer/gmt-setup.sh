@@ -8,6 +8,7 @@ set -euxo pipefail
 export USER="${USER:-$(id -un)}"
 
 GMT_DIR=/workspaces/green-metrics-tool
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 if [[ ! -d "$GMT_DIR" ]]; then
     # /workspaces can belong to root outside of Codespaces, e.g. with the devcontainer CLI
@@ -43,6 +44,9 @@ sed -i "s/common:/common:\n      psu_energy_ac_xgboost_machine:\n        CPUChip
 sed -i "/^      network_io_cgroup_container:/,+1 s/^/#/" config.yml
 
 git clone https://github.com/green-coding-solutions/example-applications.git --depth=1 --single-branch example-applications || true
+
+# GMT lives outside the workspace. The link shows the examples in the Explorer.
+ln -sfn "$GMT_DIR/example-applications" "$REPO_DIR/gmt-examples"
 
 docker compose -f docker/compose.yml down
 

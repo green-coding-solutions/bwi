@@ -12,6 +12,7 @@ Ein Klick auf den Button startet euren Codespace. Habt ihr schon einen, öffnet 
 
 - `.devcontainer/` richtet den Codespace ein. Die Installation des Green Metrics Tool stammt aus dessen eigenem Codespace.
 - `kpi-demo/` ist das Energie-Panel aus dem Block „Metriken, KPIs und Dashboards“. Darin laufen node_exporter, Prometheus, Grafana und eine Spring-Boot-App per docker compose.
+- `gmt-examples/` zeigt im Codespace auf die Beispiel-Anwendungen des Green Metrics Tool. Der Link entsteht beim Einrichten des Codespace.
 
 ## Das Energie-Panel auf euren eigenen Server bringen
 
