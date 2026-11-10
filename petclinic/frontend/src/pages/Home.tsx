@@ -7,10 +7,25 @@ export default function Home() {
   const [status, setStatus] = useState<Visit[]>([]);
 
   useEffect(() => {
-    const id = setInterval(async () => {
-      setStatus(await (await fetch("/api/status")).json());
-    }, 1000);
-    return () => clearInterval(id);
+    const load = async () => setStatus(await (await fetch("/api/status")).json());
+
+    let id: number | undefined;
+    const stop = () => window.clearInterval(id);
+    const start = () => {
+      stop();
+      load();
+      id = window.setInterval(load, 30_000);
+    };
+
+    // A hidden tab does not ask at all and catches up as soon as it is visible again.
+    const onVisibilityChange = () => (document.hidden ? stop() : start());
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    if (!document.hidden) start();
+
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, []);
 
   const latest = [...status].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
