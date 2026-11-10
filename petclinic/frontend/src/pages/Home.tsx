@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Visit } from "../api";
 
-const photos = ["foto-1.png", "foto-2.png", "foto-3.png", "foto-4.png"];
+const photos = ["foto-1", "foto-2", "foto-3", "foto-4"];
 
 export default function Home() {
   const [status, setStatus] = useState<Visit[]>([]);
@@ -38,8 +38,18 @@ export default function Home() {
 
       <h2>Unsere Praxis</h2>
       <div className="gallery">
-        {photos.map((file, i) => (
-          <img key={file} src={`/photos/${file}`} alt={`Foto ${i + 1}`} />
+        {photos.map((name, i) => (
+          <picture key={name}>
+            <source srcSet={`/photos/${name}-800.avif`} type="image/avif" />
+            <img
+              src={`/photos/${name}-800.webp`}
+              width={800}
+              height={533}
+              loading="lazy"
+              decoding="async"
+              alt={`Foto ${i + 1}`}
+            />
+          </picture>
         ))}
       </div>
     </>
