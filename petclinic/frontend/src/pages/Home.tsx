@@ -7,10 +7,9 @@ export default function Home() {
   const [status, setStatus] = useState<Visit[]>([]);
 
   useEffect(() => {
-    const id = setInterval(async () => {
-      setStatus(await (await fetch("/api/status")).json());
-    }, 1000);
-    return () => clearInterval(id);
+    const es = new EventSource("/api/status/stream");
+    es.onmessage = (e) => setStatus(JSON.parse(e.data));
+    return () => es.close();
   }, []);
 
   const latest = [...status].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);

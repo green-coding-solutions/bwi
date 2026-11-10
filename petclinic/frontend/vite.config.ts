@@ -6,6 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      "/api/status/stream": {
+        target: "http://localhost:9966",
+        rewrite: () => "/petclinic/api/status/stream",
+      },
       "/api/status": {
         target: "http://localhost:9966",
         rewrite: () => "/petclinic/api/visits",

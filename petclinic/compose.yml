@@ -14,7 +14,10 @@ services:
       interval: 2s
 
   backend:
-    image: springcommunity/spring-petclinic-rest:4.0.2
+    # The stock image has no /api/status/stream
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.web
     environment:
       SPRING_PROFILES_ACTIVE: postgres,spring-data-jpa
       POSTGRES_URL: jdbc:postgresql://db/petclinic
