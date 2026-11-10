@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-// moment/min/locales registers all locales on moment/moment.js, so import that same file.
-import moment from "moment/moment.js";
-import "moment/min/locales";
 import { getJson, type Owner } from "../api";
 
-moment.locale("de");
+// The API sends plain days. Reading and showing them in UTC keeps the day the same everywhere.
+const dateFormat = new Intl.DateTimeFormat("de-DE", { dateStyle: "long", timeZone: "UTC" });
 
-const formatDate = (date: string) => moment(date).format("LL");
+const formatDate = (date: string) => dateFormat.format(new Date(date));
 
 export default function OwnerDetail() {
   const { id } = useParams();
