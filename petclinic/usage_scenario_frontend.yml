@@ -1,0 +1,132 @@
+name: PetClinic-Frontend hinter nginx
+author: Green Coding Solutions
+description: Spring PetClinic REST, Postgres und das React-Frontend hinter nginx. Firefox lädt die Startseite, bleibt eine Minute offen, scrollt und öffnet die Berichtsseite. Basis für das Vorher-nachher-Lab im Web-Block.
+
+compose-file: !include-gmt-helper gmt-playwright.yml
+
+# GMT sums these per phase. They work everywhere, also in the Codespace, where the
+# network provider of GMT is switched off. See load/lab-zaehler.sh
+custom_metrics:
+  lab_bytes:
+    unit: Bytes
+  lab_requests:
+    unit: Requests
+
+services:
+  db:
+    image: postgres:16.15
+    environment:
+      POSTGRES_USER: petclinic
+      POSTGRES_PASSWORD: petclinic
+      POSTGRES_DB: petclinic
+    healthcheck:
+      test: pg_isready -U petclinic
+      interval: 2s
+      start_period: 120s
+      start_interval: 1s
+
+  # Not called app like in the Java scenarios on purpose. --dev-cache-build keeps
+  # images by service name, and this one is a different image.
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.web
+    environment:
+      POSTGRES_URL: jdbc:postgresql://db/petclinic
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: curl -fs http://localhost:9966/petclinic/actuator/health
+      interval: 2s
+      start_period: 120s
+      start_interval: 1s
+
+  proxy:
+    build: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: wget -q -O /dev/null http://127.0.0.1/
+      interval: 2s
+      start_period: 30s
+      start_interval: 1s
+
+  gmt-playwright-nodejs:
+    depends_on:
+      proxy:
+        condition: service_healthy
+
+flow:
+  - name: Zaehler starten
+    container: gmt-playwright-nodejs
+    hidden: true
+    commands:
+      - type: playwright
+        command: labRequests = 0; page.on("request", () => labRequests++);
+      - type: console
+        command: bash /tmp/repo/petclinic/load/lab-zaehler.sh start
+
+  - name: Startseite laden
+    container: gmt-playwright-nodejs
+    commands:
+      - type: playwright
+        command: await page.goto("http://proxy/");
+      - type: console
+        command: sleep 5
+        note: Rendern und Bilder dekodieren
+      - type: playwright
+        command: fs.writeFileSync("/tmp/lab-requests", String(labRequests));
+      - type: console
+        command: bash /tmp/repo/petclinic/load/lab-zaehler.sh
+
+  - name: Leerlauf im offenen Tab
+    container: gmt-playwright-nodejs
+    commands:
+      - type: console
+        command: sleep 60
+        note: Niemand klickt, die Seite bleibt offen
+      - type: playwright
+        command: fs.writeFileSync("/tmp/lab-requests", String(labRequests));
+      - type: console
+        command: bash /tmp/repo/petclinic/load/lab-zaehler.sh
+
+  - name: Scrollen
+    container: gmt-playwright-nodejs
+    commands:
+      - type: playwright
+        command: |
+          let loop_ticks = 0;
+          while (loop_ticks < 100) {
+            const atBottom = await page.evaluate(() => {
+              const d = document.documentElement;
+              return d.scrollTop + window.innerHeight >= d.scrollHeight;
+            });
+            if (atBottom) break;
+            await page.mouse.wheel(0, 200);
+            await page.waitForTimeout(200);
+            loop_ticks++;
+          }
+      - type: console
+        command: sleep 2
+        note: Bilder weiter unten laden lassen
+      - type: playwright
+        command: fs.writeFileSync("/tmp/lab-requests", String(labRequests));
+      - type: console
+        command: bash /tmp/repo/petclinic/load/lab-zaehler.sh
+
+  - name: Berichte laden
+    container: gmt-playwright-nodejs
+    commands:
+      - type: playwright
+        command: 'await page.getByRole("link", { name: "Berichte" }).click();'
+      - type: playwright
+        command: await page.waitForSelector("canvas").catch((e) => console.log(e));
+      - type: console
+        command: sleep 3
+        note: Die Diagramme animieren etwa eine Sekunde
+      - type: playwright
+        command: fs.writeFileSync("/tmp/lab-requests", String(labRequests));
+      - type: console
+        command: bash /tmp/repo/petclinic/load/lab-zaehler.sh

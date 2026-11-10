@@ -79,6 +79,23 @@ python3 runner.py --name "PetClinic" --uri /workspaces/bwi --filename petclinic/
 
 Neben `usage_scenario.yml` (JDK 21) liegen die Varianten aus der Java-Liste. Das sind `usage_scenario_jdk25_coh.yml`, `usage_scenario_native.yml`, `usage_scenario_crac.yml` und `usage_scenario_l2cache.yml`. Der erste Lauf baut die Images und dauert einige Minuten länger. Native Image braucht beim Bauen viel Speicher und ist im Codespace nur etwas für Geduldige.
 
+## Web-Lab
+
+Das Vorher-nachher-Lab aus dem Web-Block misst das React-Frontend. `gmt-messen.sh` startet den Lauf und zeigt am Ende pro Phase Dauer, Energie, Bytes und Requests.
+
+```sh
+cd petclinic/frontend
+npm ci
+git switch main
+npm run build
+./gmt-messen.sh
+git switch lab/a-lazy-route
+npm run build
+./gmt-messen.sh
+```
+
+`npm run build` listet die Chunk-Größen. Der erste Lauf baut das Backend und lädt den Browser. Er dauert deshalb einige Minuten länger. Die Branches heißen `lab/a-lazy-route`, `lab/b1-sse`, `lab/b2-visibility`, `lab/c-images` und `lab/d-dependency`. Die Energie ist im Codespace eine Schätzung aus der CPU-Auslastung.
+
 ## Wenn etwas hängt
 
 - KPI-Demo neu starten mit `bash kpi-demo/up.sh`

@@ -1,0 +1,92 @@
+diff --git a/src/main/java/org/springframework/samples/petclinic/rest/controller/StatusStreamController.java b/src/main/java/org/springframework/samples/petclinic/rest/controller/StatusStreamController.java
+new file mode 100644
+index 0000000..f04f390
+--- /dev/null
++++ b/src/main/java/org/springframework/samples/petclinic/rest/controller/StatusStreamController.java
+@@ -0,0 +1,86 @@
++package org.springframework.samples.petclinic.rest.controller;
++
++import org.aspectj.lang.annotation.AfterReturning;
++import org.aspectj.lang.annotation.Aspect;
++import org.springframework.http.MediaType;
++import org.springframework.samples.petclinic.mapper.VisitMapper;
++import org.springframework.samples.petclinic.service.ClinicService;
++import org.springframework.web.bind.annotation.GetMapping;
++import org.springframework.web.bind.annotation.RequestMapping;
++import org.springframework.web.bind.annotation.RestController;
++import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
++
++import java.io.IOException;
++import java.util.Collection;
++import java.util.List;
++import java.util.concurrent.CopyOnWriteArrayList;
++import java.util.concurrent.Executors;
++import java.util.concurrent.ScheduledExecutorService;
++import java.util.concurrent.TimeUnit;
++
++/**
++ * Workshop. Pushes the list of visits to open browser tabs, so that they do not have to poll.
++ * A tab gets the list once when it connects and again whenever a visit is saved or deleted.
++ * In between only a comment goes out now and then, which keeps nginx from closing the connection.
++ */
++@Aspect
++@RestController
++@RequestMapping("api/status")
++public class StatusStreamController {
++
++    private static final long HEARTBEAT_SECONDS = 25;
++
++    private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
++    private final ClinicService clinicService;
++    private final VisitMapper visitMapper;
++
++    public StatusStreamController(ClinicService clinicService, VisitMapper visitMapper) {
++        this.clinicService = clinicService;
++        this.visitMapper = visitMapper;
++
++        ScheduledExecutorService heartbeat = Executors.newSingleThreadScheduledExecutor(runnable -> {
++            Thread thread = new Thread(runnable, "status-stream-heartbeat");
++            thread.setDaemon(true);
++            return thread;
++        });
++        heartbeat.scheduleAtFixedRate(this::sendHeartbeat, HEARTBEAT_SECONDS, HEARTBEAT_SECONDS, TimeUnit.SECONDS);
++    }
++
++    @GetMapping(path = "stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
++    public SseEmitter stream() throws IOException {
++        SseEmitter emitter = new SseEmitter(0L);
++        emitter.onCompletion(() -> emitters.remove(emitter));
++        emitter.onTimeout(() -> emitters.remove(emitter));
++        emitter.onError(error -> emitters.remove(emitter));
++        emitter.send(SseEmitter.event().data(currentVisits(), MediaType.APPLICATION_JSON));
++        emitters.add(emitter);
++        return emitter;
++    }
++
++    @AfterReturning("execution(* org.springframework.samples.petclinic.service.ClinicService.saveVisit(..))"
++        + " || execution(* org.springframework.samples.petclinic.service.ClinicService.deleteVisit(..))")
++    public void publishVisits() {
++        Object visits = currentVisits();
++        for (SseEmitter emitter : emitters) {
++            send(emitter, SseEmitter.event().data(visits, MediaType.APPLICATION_JSON));
++        }
++    }
++
++    private void sendHeartbeat() {
++        for (SseEmitter emitter : emitters) {
++            send(emitter, SseEmitter.event().comment("ping"));
++        }
++    }
++
++    private void send(SseEmitter emitter, SseEmitter.SseEventBuilder event) {
++        try {
++            emitter.send(event);
++        } catch (IOException | IllegalStateException e) {
++            emitters.remove(emitter);
++        }
++    }
++
++    private Collection<?> currentVisits() {
++        return visitMapper.toVisitsDto(clinicService.findAllVisits());
++    }
++}

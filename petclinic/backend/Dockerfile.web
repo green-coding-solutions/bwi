@@ -1,0 +1,31 @@
+# Spring PetClinic REST for the web lab: upstream plus sse.patch, which adds the
+# endpoint /api/status/stream. The usage scenario builds this once and every lab
+# branch measures against the same image.
+#
+# Kept apart from Dockerfile so that the five Java variants stay as they were measured.
+
+ARG PETCLINIC_TAG=v4.0.2
+# A single 502 from Maven Central must not cost a whole run, so Maven retries gateway errors as well.
+ARG MAVEN_RETRY="-Daether.transport.http.retryHandler.count=6 -Daether.transport.http.retryHandler.serviceUnavailable=429,500,502,503,504"
+
+FROM alpine/git:v2.49.1 AS source
+ARG PETCLINIC_TAG
+WORKDIR /src
+RUN git clone --depth 1 --branch ${PETCLINIC_TAG} https://github.com/spring-petclinic/spring-petclinic-rest.git .
+COPY sse.patch /tmp/sse.patch
+RUN git apply /tmp/sse.patch
+
+FROM maven:3.9.16-eclipse-temurin-21-noble AS jar
+ARG MAVEN_RETRY
+ENV MAVEN_ARGS=${MAVEN_RETRY}
+WORKDIR /src
+COPY --from=source /src .
+RUN mvn -B -q -DskipTests -Dcheckstyle.skip -Djacoco.skip package \
+    && cp target/spring-petclinic-rest-*.jar /app.jar
+
+FROM eclipse-temurin:21.0.13_9-jre-noble
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+COPY --from=jar /app.jar /app/app.jar
+ENV SPRING_PROFILES_ACTIVE=postgres,spring-data-jpa
+EXPOSE 9966
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
