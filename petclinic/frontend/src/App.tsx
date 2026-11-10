@@ -1,9 +1,12 @@
+import { lazy, Suspense } from "react";
 import { NavLink, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Owners from "./pages/Owners";
 import OwnerDetail from "./pages/OwnerDetail";
 import Vets from "./pages/Vets";
-import Berichte from "./pages/Berichte";
+
+// The reports page and Chart.js are only fetched when someone opens the page.
+const Berichte = lazy(() => import("./pages/Berichte"));
 
 export default function App() {
   return (
@@ -21,7 +24,14 @@ export default function App() {
           <Route path="/owners" element={<Owners />} />
           <Route path="/owners/:id" element={<OwnerDetail />} />
           <Route path="/vets" element={<Vets />} />
-          <Route path="/berichte" element={<Berichte />} />
+          <Route
+            path="/berichte"
+            element={
+              <Suspense fallback={<p>Wird geladen ...</p>}>
+                <Berichte />
+              </Suspense>
+            }
+          />
         </Routes>
       </main>
     </>
